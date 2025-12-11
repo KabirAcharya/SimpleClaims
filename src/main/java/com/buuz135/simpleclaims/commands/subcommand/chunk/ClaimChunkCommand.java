@@ -1,0 +1,63 @@
+package com.buuz135.simpleclaims.commands.subcommand.chunk;
+
+import com.buuz135.simpleclaims.claim.ClaimManager;
+import com.buuz135.simpleclaims.commands.CommandMessages;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.command.CommandSender;
+import com.hypixel.hytale.server.core.command.newcmdsystem.CommandContext;
+import com.hypixel.hytale.server.core.command.newcmdsystem.commandtypes.AsyncCommandBase;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
+
+import java.util.concurrent.CompletableFuture;
+
+import static com.hypixel.hytale.server.core.command.commands.player.inventory.InventorySeeCommand.MESSAGE_COMMANDS_ERRORS_PLAYER_NOT_IN_WORLD;
+
+public class ClaimChunkCommand extends AsyncCommandBase {
+
+    public ClaimChunkCommand() {
+        super("claim", "Clains the current chunk");
+    }
+
+    @NonNullDecl
+    @Override
+    protected CompletableFuture<Void> executeAsync(CommandContext commandContext) {
+        CommandSender sender = commandContext.sender();
+        if (sender instanceof Player player) {
+            Ref<EntityStore> ref = player.getReference();
+            if (ref != null && ref.isValid()) {
+                Store<EntityStore> store = ref.getStore();
+                World world = store.getExternalData().getWorld();
+                return CompletableFuture.runAsync(() -> {
+                    PlayerRef playerRefComponent = store.getComponent(ref, PlayerRef.getComponentType());
+                    if (playerRefComponent != null) {
+                        var party = ClaimManager.getInstance().getPartyFromPlayer(player);
+                        if (party == null) {
+                            party = ClaimManager.getInstance().createParty(player);
+                            player.sendMessage(CommandMessages.PARTY_CREATED);
+                        }
+                        var chunk = ClaimManager.getInstance().getChunkRawCoords(player.getWorld().getName(), (int) player.getPosition().getX(), (int) player.getPosition().getZ());
+                        if (chunk != null) {
+                            player.sendMessage(chunk.getPartyOwner().equals(party.getId()) ? CommandMessages.ALREADY_CLAIMED_BY_YOU : CommandMessages.ALREADY_CLAIMED_BY_ANOTHER_PLAYER);
+                            return;
+                        }
+                        if (!ClaimManager.getInstance().hasEnoughClaimsLeft(party)) {
+                            player.sendMessage(CommandMessages.NOT_ENOUGH_CHUNKS);
+                            return;
+                        }
+                        ClaimManager.getInstance().claimChunkByWithRawCoords(player.getWorld().getName(), (int) player.getPosition().getX(), (int) player.getPosition().getZ(), party);
+                    }
+                }, world);
+            } else {
+                commandContext.sendMessage(MESSAGE_COMMANDS_ERRORS_PLAYER_NOT_IN_WORLD);
+                return CompletableFuture.completedFuture(null);
+            }
+        } else {
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+}
