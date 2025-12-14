@@ -2,6 +2,7 @@ package com.buuz135.simpleclaims.gui;
 
 import com.buuz135.simpleclaims.claim.ClaimManager;
 import com.buuz135.simpleclaims.claim.party.PartyInfo;
+import com.buuz135.simpleclaims.commands.CommandMessages;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
@@ -10,6 +11,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.CustomPageLifetime;
 import com.hypixel.hytale.protocol.CustomUIEventBindingType;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
@@ -43,12 +45,23 @@ public class PartyListGui extends InteractiveCustomUIPage<PartyListGui.PartyList
             return;
         }
         if (data.action != null) {
-            var party = ClaimManager.getInstance().getPartyById(UUID.fromString(data.action));
-            if (party != null){
-                var player = store.getComponent(ref, Player.getComponentType());
-                player.getPageManager().openCustomPage(ref, store, new PartyInfoEditGui(playerRef, party, true));
+            var split = data.action.split(":");
+            if (split[0].equals("Edit")){
+                var party = ClaimManager.getInstance().getPartyById(UUID.fromString(split[1]));
+                if (party != null){
+                    var player = store.getComponent(ref, Player.getComponentType());
+                    player.getPageManager().openCustomPage(ref, store, new PartyInfoEditGui(playerRef, party, true));
+                }
+                return;
             }
-            return;
+            if (split[0].equals("Use")){
+                var party = ClaimManager.getInstance().getPartyById(UUID.fromString(split[1]));
+                if (party != null){
+                    ClaimManager.getInstance().getAdminUsageParty().put(playerRef.getUuid().toString(), UUID.fromString(split[1]));
+                    playerRef.sendMessage(Message.join(CommandMessages.NOW_USING_PARTY, Message.raw(party.getName())));
+                    return;
+                }
+            }
         }
         this.sendUpdate();
     }
@@ -69,8 +82,8 @@ public class PartyListGui extends InteractiveCustomUIPage<PartyListGui.PartyList
             if (!value.getName().toLowerCase().contains(searchQuery.toLowerCase())) continue;
             uiCommandBuilder.append("#PartyCards", "Pages/OpPartyListEntry.ui");
             uiCommandBuilder.set("#PartyCards[" + i + "] #PartyName.Text", value.getName());
-            uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#PartyCards[" + i + "] #EditPartyButton", EventData.of("Action", value.getId().toString()), false);
-
+            uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#PartyCards[" + i + "] #EditPartyButton", EventData.of("Action", "Edit:" + value.getId().toString()), false);
+            uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#PartyCards[" + i + "] #UsePartyButton", EventData.of("Action", "Use:" + value.getId().toString()), false);
             ++i;
         }
     }

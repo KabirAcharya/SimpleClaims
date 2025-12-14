@@ -1,17 +1,12 @@
-package com.buuz135.simpleclaims.commands.subcommand.party.op;
+package com.buuz135.simpleclaims.commands.subcommand.chunk.op;
 
 import com.buuz135.simpleclaims.claim.ClaimManager;
 import com.buuz135.simpleclaims.commands.CommandMessages;
-import com.buuz135.simpleclaims.gui.PartyInfoEditGui;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
-import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgumentType;
-import com.hypixel.hytale.server.core.command.system.arguments.types.SingleArgumentType;
 import com.hypixel.hytale.server.core.command.system.basecommands.AsyncCommandBase;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -23,14 +18,11 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.hypixel.hytale.server.core.command.commands.player.inventory.InventorySeeCommand.MESSAGE_COMMANDS_ERRORS_PLAYER_NOT_IN_WORLD;
 
-public class OpCreatePartyCommand extends AsyncCommandBase {
+public class OpUnclaimChunkCommand extends AsyncCommandBase {
 
-    private RequiredArg<String> name;
-
-    public OpCreatePartyCommand() {
-        super("admin-create", "Creates a new party");
+    public OpUnclaimChunkCommand() {
+        super("admin-unclaim", "Unclaims the chunk where you are");
         this.setPermissionGroup(GameMode.Creative);
-        this.name = this.withRequiredArg("party-name", "The name of the party to create (Can be changed later)", ArgTypes.STRING);
     }
 
     @NonNullDecl
@@ -44,14 +36,14 @@ public class OpCreatePartyCommand extends AsyncCommandBase {
                 World world = store.getExternalData().getWorld();
                 return CompletableFuture.runAsync(() -> {
                     PlayerRef playerRefComponent = store.getComponent(ref, PlayerRef.getComponentType());
-                    var commandName = commandContext.get(this.name);
                     if (playerRefComponent != null) {
-                        var party = ClaimManager.getInstance().getPartyFromPlayer(player);
-
-                        party = ClaimManager.getInstance().createParty(player);
-                        party.setName(commandName);
-                        player.sendMessage(CommandMessages.PARTY_CREATED);
-                        player.getPageManager().openCustomPage(ref, store, new PartyInfoEditGui(playerRefComponent, party, true));
+                        var chunk = ClaimManager.getInstance().getChunkRawCoords(player.getWorld().getName(), (int) player.getPosition().getX(), (int) player.getPosition().getZ());
+                        if (chunk == null) {
+                            player.sendMessage(CommandMessages.NOT_CLAIMED);
+                            return;
+                        }
+                        ClaimManager.getInstance().unclaimRawCoords(player.getWorld().getName(), (int) player.getPosition().getX(), (int) player.getPosition().getZ());
+                        player.sendMessage(CommandMessages.UNCLAIMED);
                     }
                 }, world);
             } else {

@@ -2,6 +2,8 @@ package com.buuz135.simpleclaims.commands;
 
 import com.buuz135.simpleclaims.commands.subcommand.chunk.ClaimChunkCommand;
 import com.buuz135.simpleclaims.commands.subcommand.chunk.UnclaimChunkCommand;
+import com.buuz135.simpleclaims.commands.subcommand.chunk.op.OpClaimChunkCommand;
+import com.buuz135.simpleclaims.commands.subcommand.chunk.op.OpUnclaimChunkCommand;
 import com.buuz135.simpleclaims.gui.ChunkInfoGui;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -30,6 +32,8 @@ public class SimpleClaimProtectCommand extends AsyncCommandBase {
         this.addSubCommand(new ClaimChunkCommand());
         this.addSubCommand(new UnclaimChunkCommand());
 
+        this.addSubCommand(new OpClaimChunkCommand());
+        this.addSubCommand(new OpUnclaimChunkCommand());
     }
 
     @NonNullDecl

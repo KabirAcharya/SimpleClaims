@@ -1,17 +1,12 @@
-package com.buuz135.simpleclaims.commands.subcommand.party.op;
+package com.buuz135.simpleclaims.commands.subcommand.chunk.op;
 
 import com.buuz135.simpleclaims.claim.ClaimManager;
 import com.buuz135.simpleclaims.commands.CommandMessages;
-import com.buuz135.simpleclaims.gui.PartyInfoEditGui;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
-import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgumentType;
-import com.hypixel.hytale.server.core.command.system.arguments.types.SingleArgumentType;
 import com.hypixel.hytale.server.core.command.system.basecommands.AsyncCommandBase;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -23,14 +18,11 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.hypixel.hytale.server.core.command.commands.player.inventory.InventorySeeCommand.MESSAGE_COMMANDS_ERRORS_PLAYER_NOT_IN_WORLD;
 
-public class OpCreatePartyCommand extends AsyncCommandBase {
+public class OpClaimChunkCommand extends AsyncCommandBase {
 
-    private RequiredArg<String> name;
-
-    public OpCreatePartyCommand() {
-        super("admin-create", "Creates a new party");
+    public OpClaimChunkCommand() {
+        super("admin-claim", "Claims the chunk where you are, must have selected a party first using the /scp admin-party-list command");
         this.setPermissionGroup(GameMode.Creative);
-        this.name = this.withRequiredArg("party-name", "The name of the party to create (Can be changed later)", ArgTypes.STRING);
     }
 
     @NonNullDecl
@@ -44,14 +36,27 @@ public class OpCreatePartyCommand extends AsyncCommandBase {
                 World world = store.getExternalData().getWorld();
                 return CompletableFuture.runAsync(() -> {
                     PlayerRef playerRefComponent = store.getComponent(ref, PlayerRef.getComponentType());
-                    var commandName = commandContext.get(this.name);
                     if (playerRefComponent != null) {
-                        var party = ClaimManager.getInstance().getPartyFromPlayer(player);
-
-                        party = ClaimManager.getInstance().createParty(player);
-                        party.setName(commandName);
-                        player.sendMessage(CommandMessages.PARTY_CREATED);
-                        player.getPageManager().openCustomPage(ref, store, new PartyInfoEditGui(playerRefComponent, party, true));
+                        var selectedPartyID = ClaimManager.getInstance().getAdminUsageParty().getOrDefault(player.getUuid().toString(), null);
+                        if (selectedPartyID == null) {
+                            player.sendMessage(CommandMessages.ADMIN_PARTY_NOT_SELECTED);
+                            return;
+                        }
+                        var party = ClaimManager.getInstance().getPartyById(selectedPartyID);
+                        if (party == null) {
+                            player.sendMessage(CommandMessages.PARTY_NOT_FOUND);
+                            return;
+                        }
+                        var chunk = ClaimManager.getInstance().getChunkRawCoords(player.getWorld().getName(), (int) player.getPosition().getX(), (int) player.getPosition().getZ());
+                        if (chunk != null) {
+                            player.sendMessage(chunk.getPartyOwner().equals(party.getId()) ? CommandMessages.ALREADY_CLAIMED_BY_YOU : CommandMessages.ALREADY_CLAIMED_BY_ANOTHER_PLAYER);
+                            return;
+                        }
+                        if (!ClaimManager.getInstance().hasEnoughClaimsLeft(party)) {
+                            player.sendMessage(CommandMessages.NOT_ENOUGH_CHUNKS);
+                            return;
+                        }
+                        var chunkInfo = ClaimManager.getInstance().claimChunkByRawCoords(player.getWorld().getName(), (int) player.getPosition().getX(), (int) player.getPosition().getZ(), party, player);
                     }
                 }, world);
             } else {

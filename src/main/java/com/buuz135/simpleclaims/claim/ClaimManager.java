@@ -26,6 +26,7 @@ public class ClaimManager {
 
     private HashMap<String, PartyInfo> parties;
     private HashMap<String, HashMap<String, ChunkInfo>> chunks;
+    private HashMap<String, UUID> adminUsageParty;
     private boolean needsMapUpdate;
     private boolean isDirty;
     private Thread savingThread;
@@ -39,6 +40,7 @@ public class ClaimManager {
     private ClaimManager() {
         this.parties = new HashMap<>();
         this.chunks = new HashMap<>();
+        this.adminUsageParty = new HashMap<>();
         this.needsMapUpdate = false;
         this.isDirty = false;
         this.playerNameTracker = new PlayerNameTracker();
@@ -256,5 +258,9 @@ public class ClaimManager {
 
     public HashMap<String, HashMap<String, ChunkInfo>> getChunks() {
         return chunks;
+    }
+
+    public HashMap<String, UUID> getAdminUsageParty() {
+        return adminUsageParty;
     }
 }

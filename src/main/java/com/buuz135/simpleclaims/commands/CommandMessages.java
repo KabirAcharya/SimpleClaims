@@ -16,4 +16,9 @@ public class CommandMessages {
     public static final Message PARTY_CREATED = Message.translation("commands.simpleclaims.partyCreated");
 
     public static final Message NOT_ENOUGH_CHUNKS = Message.translation("commands.simpleclaims.notEnoughChunks");
+
+    public static final Message NOW_USING_PARTY = Message.translation("commands.simpleclaims.nowUsingParty");
+
+    public static final Message ADMIN_PARTY_NOT_SELECTED = Message.translation("commands.simpleclaims.admin.partyNotSelected");
+    public static final Message PARTY_NOT_FOUND = Message.translation("commands.simpleclaims.admin.partyNotFound");
 }

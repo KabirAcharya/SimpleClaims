@@ -25,7 +25,7 @@ import static com.hypixel.hytale.server.core.command.commands.player.inventory.I
 public class OpPartyListCommand extends AsyncCommandBase {
 
     public OpPartyListCommand() {
-        super("op-edit-party", "Shows all the parties and allows you to edit them");
+        super("admin-party-list", "Shows all the parties and allows you to edit them");
         this.setPermissionGroup(GameMode.Creative);
     }
 
