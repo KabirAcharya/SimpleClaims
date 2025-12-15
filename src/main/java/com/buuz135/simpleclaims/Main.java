@@ -43,7 +43,7 @@ public class Main extends JavaPlugin {
     }
 
     public static void main(String[] args) throws IOException {
-        com.hypixel.hytale.Main.main(new String[]{"--allow-op","--assets=C:\\Users\\buuz1\\AppData\\Roaming\\Hytale\\install\\release\\package\\game\\latest\\Assets", "--packs=C:\\Users\\buuz1\\AppData\\Roaming\\Hytale\\UserData\\Packs"});
+        com.hypixel.hytale.Main.main(new String[]{"--allow-op","--assets=C:\\Users\\buuz1\\AppData\\Roaming\\Hytale\\install\\release\\package\\game\\latest\\Assets", "--packs=C:\\Code\\Java\\Hytale\\SimpleClaims\\src\\main"});
     }
 
     @Override
